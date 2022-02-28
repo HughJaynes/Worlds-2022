@@ -89,7 +89,7 @@ void baseRotate(void * ignore) {
 
 
 // BASE MOVE TO
-void baseMove(void * ignore) {
+void baseMoveStraight(void * ignore) {
   Motor FrontL (FRONTLPORT);
   Motor FrontR (FRONTRPORT);
   Motor MidL (MIDLPORT);
@@ -100,12 +100,17 @@ void baseMove(void * ignore) {
   // INITIALISE
   double moveStartTime = millis();
   double movePrevError = 0;
-  double errorLocalY = (targetY - globalY);
-  double errorLocalX = targetX - globalX;
+  double errorY = targetY - globalY;
+  double errorX = targetX - globalX;
+  // CHANGE TO LOCAL
 
   // MOVEMENT CODE
   if (baseMoveState) {
-    while () {
+    while (errorY > MOVEERRORMARGIN && errorX > MOVEERRORMARGIN && millis() - moveStartTime <= moveCutoff) {
+      double proportionalL = errorY * MOVEKP;
+      double proportionalR = errorX * MOVEKP;
+      double derivative = errorY - movePrevError;
+      double movePrevError = errorY;
 
 
 

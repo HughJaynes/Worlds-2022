@@ -13,6 +13,7 @@
 
 #define MOVEERRORMARGIN 1
 #define MOVEKP 200
+#define MOVEXCHANGER 1
 
 void baseOdometry(void * ignore);
 void baseRotate(void * ignore);
