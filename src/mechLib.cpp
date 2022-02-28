@@ -29,14 +29,11 @@ void baseOdometry(void * ignore) {
     double arcRadius = (rightEncoderReading/theta) + SR;
     double localYChange = 2 * (sin(theta/2)) * arcRadius;
     double localXChange = 2 * (sin(theta/2)) * ((backEncoderReading/theta) + SS);
-    double globalYChange = (sin());
-    double globalXChange = (cos(theta/2) * localXChange) + (sin(theta/2));
+    double globalYChange = (sin(theta/2) * localXChange) + (cos(theta/2) * localYChange);
+    double globalXChange = (cos(theta/2) * localXChange) - (sin(theta/2) * localYChange);
     currentBearing += theta;
     globalX += globalXChange;
     globalY += globalYChange;
-
-    // RESET ENCODERS
-
 
     delay(5);
   }
