@@ -71,9 +71,9 @@ void baseRotate(void * ignore) {
       FrontL.move(rotatePower);
       MidL.move(rotatePower);
       BackL.move(rotatePower);
-      FrontR.move(rotatePower * -1);
-      MidR.move(rotatePower * -1);
-      BackR.move(rotatePower * -1);
+      FrontR.move(-rotatePower);
+      MidR.move(-rotatePower);
+      BackR.move(-rotatePower);
 
       delay(5);
     }
