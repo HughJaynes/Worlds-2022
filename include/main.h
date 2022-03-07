@@ -8,7 +8,6 @@
 #include "api.h"
 #include "globals.hpp"
 #include "odometry.hpp"
-#include "conversions.hpp"
 
 using namespace std;
 using namespace pros;

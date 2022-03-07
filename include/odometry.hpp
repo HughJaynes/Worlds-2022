@@ -9,16 +9,15 @@
 #define ROTATEERRORMARGIN 0.1
 #define ROTATEKP 400
 #define ROTATEKD 200
-#define ROTATEMAXPOWER 100
+#define ROTATEMAXPOWER 110
 
 #define MOVEERRORMARGIN 1
 #define MOVEKP 200
 #define MOVEXCHANGER 1
 
 void baseOdometry(void * ignore);
-void baseRotate(void * ignore);
-void rotateBasef(double rotateBaseDegrees, double rotateBaseCutoff);
-void baseCurveRight(void * ignore);
+void baseControl(void * ignore);
+void rotateBase(double rotateBaseDegrees, double rotateBaseCutoff);
 
 
 #endif
