@@ -2,12 +2,14 @@
 #include "conversions.cpp"
 
 // VARIABLES
-double leftEncoderReading = 0;
-double rightEncoderReading = 0;
-double backEncoderReading = 0;
+double leftEncoderDiff = 0;
+double rightEncoderDiff = 0;
+double backEncoderDiff = 0;
+
 double currentBearing = 0;
 double globalY = 0;
 double globalX = 0;
+
 double rotateDegrees = 0;
 double rotateCutoff = 0;
 bool baseRotateState = false;
@@ -20,9 +22,9 @@ bool baseMoveState = false;
 void baseOdometry(void * ignore) {
   while (true) {
     // ENCODER READINGS
-    leftEncoderReading = 0;
-    rightEncoderReading = 0;
-    backEncoderReading = 0;
+    leftEncoderDiff = prevLeftEncoder;
+    rightEncoderDiff = prevLeftEncoder;
+    backEncoderDiff = prevLeftEncoder;
 
     // CALCULATE ANGLE AND GLOBAL CHANGE
     double theta = (leftEncoderReading - rightEncoderReading)/(SL + SR);
@@ -50,17 +52,17 @@ void baseRotate(void * ignore) {
   Motor BackR (BACKRPORT);
 
   // INITIALIZE
-  double rotateRadians = degreeToRadian(rotateDegrees);
+  double targetRotate = degreeToRadian(rotateDegrees);
   double startTime = millis();
   double prevError = 0;
 
   // MOVEMENT CODE
   if (baseRotateState) {
-    while ((fabs(rotateRadians - currentBearing) > ROTATEERRORMARGIN) && millis() - startTime <= rotateCutoff) {
-      double rotateError = rotateRadians - currentBearing;
-      double rotateP = rotateError * ROTATEKP;
-      double rotateD = (rotateError - prevError) * ROTATEKD;
-      double rotatePower = rotateP + rotateD;
+    while (fabs(targetRotate - currentBearing) > ROTATEERRORMARGIN && millis() - startTime <= rotateCutoff) {
+      double errorRotate = targetRotate - currentBearing;
+      double rotateProportional = errorRotate * ROTATEKP;
+      double rotateDerivative = (errorRotate - prevError) * ROTATEKD;
+      double rotatePower = rotateProportional + rotateDerivative;
       if (rotatePower > ROTATEMAXPOWER) {
         rotatePower = ROTATEMAXPOWER;
       }
@@ -89,7 +91,7 @@ void baseRotate(void * ignore) {
 
 
 // BASE MOVE TO
-void baseMoveStraight(void * ignore) {
+void baseCurveRight(void * ignore) {
   Motor FrontL (FRONTLPORT);
   Motor FrontR (FRONTRPORT);
   Motor MidL (MIDLPORT);
@@ -97,18 +99,27 @@ void baseMoveStraight(void * ignore) {
   Motor BackL (BACKLPORT);
   Motor BackR (BACKRPORT);
 
+  // CHANGE TO LOCAL
+  double moveLocalTargetY = (sin(currentBearing/2) * globalX) + (cos(currentBearing/2) * globalY);
+  double moveLocalTargetX = (cos(currentBearing/2) * globalX) - (cos(currentBearing/2) * globalY);
+
   // INITIALISE
   double moveStartTime = millis();
   double movePrevError = 0;
-  double errorY = targetY - globalY;
-  double errorX = targetX - globalX;
-  // CHANGE TO LOCAL
+  double errorY = targetY - moveLocalTargetY;
+  double errorX = targetX - moveLocalTargetX;
 
   // MOVEMENT CODE
   if (baseMoveState) {
     while (errorY > MOVEERRORMARGIN && errorX > MOVEERRORMARGIN && millis() - moveStartTime <= moveCutoff) {
+
+      moveLocalTargetY = (sin(currentBearing/2) * globalX) + (cos(currentBearing/2) * globalY);
+      moveLocalTargetX = (cos(currentBearing/2) * globalX) - (cos(currentBearing/2) * globalY);
+      errorY = targetY - moveLocalTargetY;
+      errorX = targetX - moveLocalTargetX;
+
       double proportionalL = errorY * MOVEKP;
-      double proportionalR = errorX * MOVEKP;
+      double proportionalR = errorY * MOVEKP;
       double derivative = errorY - movePrevError;
       double movePrevError = errorY;
 
@@ -121,7 +132,7 @@ void baseMoveStraight(void * ignore) {
 }
 
 
-void rotateBase(double rotateBaseDegrees, double rotateBaseCutoff) {
+void rotateBasef(double rotateBaseDegrees, double rotateBaseCutoff) {
   rotateDegrees = rotateBaseDegrees;
   rotateCutoff = rotateBaseCutoff;
   baseRotateState = true;

@@ -1,5 +1,5 @@
-#ifndef _MECHLIB_HPP_
-#define _MECHLIB_HPP_
+#ifndef _ODOMETRY_HPP_
+#define _ODOMETRY_HPP_
 
 
 #define SL 7.25
@@ -17,8 +17,8 @@
 
 void baseOdometry(void * ignore);
 void baseRotate(void * ignore);
-void rotateBase(double rotateBaseDegrees, double rotateBaseCutoff);
-void baseMove(void * ignore);
+void rotateBasef(double rotateBaseDegrees, double rotateBaseCutoff);
+void baseCurveRight(void * ignore);
 
 
 #endif
