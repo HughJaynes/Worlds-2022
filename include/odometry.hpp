@@ -12,8 +12,8 @@
 #define ROTATEMAXPOWER 110
 
 #define MOVEERRORMARGIN 1
-#define MOVEKP 200
-#define MOVEXCHANGER 1
+#define MOVEKP 400
+#define MOVEKD 200
 
 void baseOdometry(void * ignore);
 void baseControl(void * ignore);

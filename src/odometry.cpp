@@ -10,9 +10,17 @@ double globalY = 0;
 double globalX = 0;
 
 double targetRotate = 0;
+double rotateKp = 0;
+double rotateKd = 0;
 double cutoffRotate = 0;
 bool baseRotateState = false;
 
+double targetXMove = 0;
+double targetYMove = 0;
+double moveKp = 0;
+double moveKd = 0;
+double cutoffMove = 0;
+bool baseMoveState = false;
 
 // ODOMETRY
 void baseOdometry(void * ignore) {
@@ -53,56 +61,93 @@ void baseOdometry(void * ignore) {
 
 // ROTATE CODE
 void baseControl(void * ignore) {
-  Motor FrontL (FRONTLPORT);
-  Motor FrontR (FRONTRPORT);
-  Motor MidL (MIDLPORT);
-  Motor MidR (MIDRPORT);
-  Motor BackL (BACKLPORT);
-  Motor BackR (BACKRPORT);
+  Motor FL (FL);
+  Motor FR (FR);
+  Motor ML (ML);
+  Motor MR (MR);
+  Motor BL (BL);
+  Motor BR (BR);
 
   // ROTATE CODE
-  if (baseRotateState) {
+  if (competition::is_autonomous()) {
+    if (baseRotateState) {
+      double targetRotate = targetRotate * (atan(1)*4/180);
+      double prevErrorRotate = 0;
+      double startTime = millis();
+      // PD loop
+      while (fabs(targetRotate - currentBearing) > ROTATEERRORMARGIN && millis() - startTime <= cutoffRotate) {
 
-    // Initialise
-    double targetRotate = targetRotate * (atan(1)*4/180);
-    double prevErrorRotate = 0;
-    double startTime = millis();
+        // Calculate powers
+        double errorRotate = targetRotate - currentBearing;
+        double rotateProportional = errorRotate * ROTATEKP;
+        double rotateDerivative = (errorRotate - prevErrorRotate) * ROTATEKD;
+        double rotatePower = rotateProportional + rotateDerivative;
+        double prevRotateError = errorRotate;
 
-    // PD loop
-    while (fabs(targetRotate - currentBearing) > ROTATEERRORMARGIN && millis() - startTime <= cutoffRotate) {
+        if (rotatePower > ROTATEMAXPOWER) {
+          rotatePower = ROTATEMAXPOWER;
+        }
+        if (rotatePower < ROTATEMAXPOWER * -1) {
+          rotatePower = ROTATEMAXPOWER * -1;
+        }
+
+        // Move motors
+        FL.move(rotatePower);
+        ML.move(rotatePower);
+        BL.move(rotatePower);
+        FR.move(-rotatePower);
+        MR.move(-rotatePower);
+        BR.move(-rotatePower);
+
+        delay(5);
+      }
+      baseRotateState = false;
+    }
+
+    else if (baseMoveState) {
 
       // Calculate powers
-      double errorRotate = targetRotate - currentBearing;
-      double rotateProportional = errorRotate * ROTATEKP;
-      double rotateDerivative = (errorRotate - prevErrorRotate) * ROTATEKD;
-      double rotatePower = rotateProportional + rotateDerivative;
-      double prevRotateError = errorRotate;
+      double moveXError = targetXMove - globalX;
+      double moveYError = targetYMove - globalY;
+      double straightError = sqrt(pow(moveXError,2) + pow(moveXError,2));
+      double startTime = millis();
+      while (fabs(straightError) > MOVEERRORMARGIN && millis() - startTime <= cutoffMove) {
+        double moveXError = targetXMove - globalX;
+        double moveYError = targetYMove - globalY;
+        double straightError = sqrt(pow(moveXError,2) + pow(moveXError,2));
+        double moveKp
 
-      if (rotatePower > ROTATEMAXPOWER) {
-        rotatePower = ROTATEMAXPOWER;
-      }
-      if (rotatePower < ROTATEMAXPOWER * -1) {
-        rotatePower = ROTATEMAXPOWER * -1;
-      }
-
-      // Move motors
-      FrontL.move(rotatePower);
-      MidL.move(rotatePower);
-      BackL.move(rotatePower);
-      FrontR.move(-rotatePower);
-      MidR.move(-rotatePower);
-      BackR.move(-rotatePower);
 
       delay(5);
+      }
     }
-    baseRotateState = false;
-  }
 
+    else {
+      FL.move(0);
+      ML.move(0);
+      BL.move(0);
+      FR.move(0);
+      MR.move(0);
+      BR.move(0);
+    }
+  }
 }
 
 
-void rotateBase(double rotateBaseDegrees, double rotateBaseCutoff) {
-  targetRotate = rotateBaseDegrees * (atan(1)*4/180);
+void rotateBase(double rotateBaseDegrees, double rotateBaseCutoff, double rotateKpInput = ROTATEKP, double rotateKdInput = ROTATEKD) {
+  targetRotate = rotateBaseDegrees * ((atan(1)*4)/180);
   cutoffRotate = rotateBaseCutoff;
+  rotateKp = rotateKpInput;
+  rotateKd = rotateKdInput;
   baseRotateState = true;
+}
+
+void pointBase(double pointX, double pointY, double pointCutoff, double pointKp = ROTATEKP, double pointKd = ROTATEKD) {
+  double pointXError = pointX - globalX;
+  double pointYError = pointY - globalY;
+  double targetPoint = atan(pointXError/pointYError) * 180/atan(1)*4;
+  rotateBase(targetPoint, pointCutoff, pointKp, pointKd);
+}
+
+void moveToBase(double moveTargetX, double moveTargetY, double moveToCutoff, double moveToKp = MOVEKP, double moveToKd = MOVEKD) {
 }
