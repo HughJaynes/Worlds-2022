@@ -22,6 +22,13 @@ double moveKd = 0;
 double cutoffMove = 0;
 bool baseMoveState = false;
 
+double targetLift = 0;
+
+bool clawPos = true;
+bool tilterPos = false;
+bool tilterClawPos = true;
+bool ringPos = false;
+
 // ODOMETRY
 void baseOdometry(void * ignore) {
   // Set variables
@@ -115,7 +122,6 @@ void baseControl(void * ignore) {
         double moveXError = targetXMove - globalX;
         double moveYError = targetYMove - globalY;
         double straightError = sqrt(pow(moveXError,2) + pow(moveXError,2));
-        double moveKp
 
 
       delay(5);
@@ -131,6 +137,21 @@ void baseControl(void * ignore) {
       BR.move(0);
     }
   }
+}
+
+
+void liftControl(void * ignore) {
+    Motor LF (LFPORT,E_MOTOR_GEARSET_36,true,E_MOTOR_ENCODER_DEGREES);
+
+    double liftError = targetLift - LF.get_position();
+
+    while (true) {
+      liftError = targetLift - LF.get_position();
+      double liftPower = liftError * LIFTKP;
+      LF.move(liftPower);
+
+      delay(5);
+    }
 }
 
 
@@ -150,4 +171,65 @@ void pointBase(double pointX, double pointY, double pointCutoff, double pointKp 
 }
 
 void moveToBase(double moveTargetX, double moveTargetY, double moveToCutoff, double moveToKp = MOVEKP, double moveToKd = MOVEKD) {
+}
+
+
+void moveLift(double liftTarget) {
+  targetLift = liftTarget;
+}
+
+void toggleClaw() {
+  ADIDigitalOut CL (CLPORT);
+
+  if (clawPos) {
+    clawPos = false;
+    CL.set_value(false);
+  }
+  else {
+    clawPos = true;
+    CL.set_value(true);
+  }
+}
+
+void toggleTilter() {
+  ADIDigitalOut LT (LTPORT);
+  ADIDigitalOut RT (RTPORT);
+
+  if (tilterPos) {
+    tilterPos = false;
+    LT.set_value(false);
+    RT.set_value(false);
+  }
+  else {
+    tilterPos = true;
+    LT.set_value(true);
+    RT.set_value(true);
+  }
+}
+
+
+void toggleTilterClaw() {
+  ADIDigitalOut TC (TCPORT);
+
+  if (tilterClawPos) {
+    tilterClawPos = false;
+    TC.set_value(false);
+  }
+  else {
+    tilterClawPos = true;
+    TC.set_value(true);
+  }
+}
+
+void toggleRings() {
+  Motor RM (RMPORT,E_MOTOR_GEARSET_06,true,E_MOTOR_ENCODER_DEGREES);
+
+  if (ringPos) {
+    ringPos = false;
+    RM.move(0);
+  }
+  else {
+    ringPos = true;
+    RM.move(-127);
+  }
 }

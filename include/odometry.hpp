@@ -15,9 +15,17 @@
 #define MOVEKP 400
 #define MOVEKD 200
 
+#define LIFTKP 0.9
+
 void baseOdometry(void * ignore);
 void baseControl(void * ignore);
+void liftControl(void * ignore);
 void rotateBase(double rotateBaseDegrees, double rotateBaseCutoff);
+void moveLift(double liftTarget);
+void toggleClaw();
+void toggleTilter();
+void toggleTilterClaw();
+void toggleRings();
 
 
 #endif
