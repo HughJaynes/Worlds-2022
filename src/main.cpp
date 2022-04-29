@@ -5,17 +5,6 @@ bool lcPos = false;
 bool tPos = false;
 int rState = 0;
 
-void liftControl (void* param) {
-	Motor LI (LIPORT);
-    
-    LI.tare_position();
-
-    while (true) {
-        LI.move((lPos - LI.get_position()) * LIFTKP);
-        delay(5);
-    }
-}
-
 /**
  * Runs initialization code. This occurs as soon as the program is started.
  *
@@ -39,7 +28,8 @@ void initialize() {
 
     Controller master (E_CONTROLLER_MASTER);
 
-    Task liftController (liftControl);
+    int * lPosPointer = &lPos;
+    Task liftController (liftControl, (void*)lPosPointer, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Lift Control");
 }
 
 /**
