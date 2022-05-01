@@ -16,9 +16,11 @@
 #define T2PISTON 'C' // Tilter 2 piston port
 #define TCPISTON 'B' // Tilter claw piston
 
+#define IMUPORT 20 // Inertial sensor port
+
 // Constants for Subsystems
 #define LIFTUP 580 // Up position of lift
-#define LIFTMID 350 // Middle position of lift
+#define LIFTMID 400 // Middle position of lift
 #define LIFTDOWN 55 // Down position of lift
 #define LIFTKP 1 // Kp value for the lift motor
 

@@ -1,24 +1,9 @@
 #include "main.h"
 
 int lPos = 0;
-bool lcPos = false;
-bool tPos = false;
 int rState = 0;
+bool frontPos = true;
 
-<<<<<<< HEAD
-void liftControl (void* param) {
-	Motor LI (LIPORT);
-
-    LI.tare_position();
-
-    while (true) {
-        LI.move((lPos - LI.get_position()) * LIFTKP);
-        delay(5);
-    }
-}
-
-=======
->>>>>>> 791f03440d9ef30593c09639c126f6c3a91c9868
 /**
  * Runs initialization code. This occurs as soon as the program is started.
  *
@@ -26,6 +11,7 @@ void liftControl (void* param) {
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
+
     Motor FL (FLPORT, E_MOTOR_GEARSET_18, true, E_MOTOR_ENCODER_DEGREES);
     Motor FR (FRPORT, E_MOTOR_GEARSET_18, false, E_MOTOR_ENCODER_DEGREES);
     Motor ML (MLPORT, E_MOTOR_GEARSET_18, true, E_MOTOR_ENCODER_DEGREES);
@@ -40,10 +26,15 @@ void initialize() {
     ADIDigitalOut T2 (T2PISTON);
     ADIDigitalOut TC (TCPISTON);
 
+    Imu IMU (IMUPORT);
+
     Controller master (E_CONTROLLER_MASTER);
 
-    int * lPosPointer = &lPos;
-    Task liftController (liftControl, (void*)lPosPointer, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Lift Control");
+    Task liftControlTask (liftControl, (void*)"PROS", TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Lift Control");
+    Task baseOdometryTask (baseOdometry, (void*)"PROS", TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Odometry");
+    Task baseControlTask (baseControl, (void*)"PROS", TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Base Control");
+    Task getBearingTask (getBearing, (void*)"PROS", TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Sensors");
+    Task backIntakeTask (toggleTilter, (void*)"PROS", TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Back Intake");
 }
 
 /**
@@ -75,7 +66,9 @@ void competition_initialize() {}
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
-void autonomous() {}
+void autonomous() {
+  moveBase(30,3000);
+}
 
 /**
  * Runs the operator control code. This function will be started in its own task
@@ -101,9 +94,6 @@ void opcontrol() {
     Motor RI (RIPORT);
 
     ADIDigitalOut LC (LCPISTON);
-    ADIDigitalOut T1 (T1PISTON);
-    ADIDigitalOut T2 (T2PISTON);
-    ADIDigitalOut TC (TCPISTON);
 
     Controller master (E_CONTROLLER_MASTER);
 
@@ -125,17 +115,20 @@ void opcontrol() {
             }
         }
 
+        moveLift(lPos);
+
         if (master.get_digital_new_press(E_CONTROLLER_DIGITAL_R1)) {
-            lcPos = !lcPos;
-            LC.set_value(lcPos);
+            // lcToggle();
+            frontPos = !frontPos;
+            if(frontPos){
+              LC.set_value(LOW);
+            }else {
+              LC.set_value(HIGH);
+            }
         }
 
         if (master.get_digital_new_press(E_CONTROLLER_DIGITAL_R2)) {
-            tPos = !tPos;
-            TC.set_value(!tPos);
-            delay(1);
-            T1.set_value(tPos);
-            T2.set_value(tPos);
+          toggleSwitch();
         }
 
         if (master.get_digital_new_press(E_CONTROLLER_DIGITAL_X)) {
@@ -169,6 +162,7 @@ void opcontrol() {
       	MR.move(master.get_analog(E_CONTROLLER_ANALOG_RIGHT_Y));
       	BR.move(master.get_analog(E_CONTROLLER_ANALOG_RIGHT_Y));
 
+        printf("Heading: %.2f\n",bearing);
       	delay(5);
     }
 }
