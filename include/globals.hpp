@@ -24,4 +24,14 @@
 
 #define RINGSPEED 127 // Speed of Ring Intake
 
+#define ROTATE_BASE 0 // Rotate the base
+#define MOVE_BASE 1 // Move the base
+#define BRAKE_BASE 2 // Brake the base
+#define BASEKP 0.0 // Kp value for the base
+#define BASEKD 0.0 // Kd value for the base
+#define BASEERRORMARGIN 0.0 // Error margin for the base
+#define ROTATEKP 0.0 // Kp value for the base rotation
+#define ROTATEKD 0.0 // Kd value for the base rotation
+#define ROTATEERRORMARGIN 0.0 // Error margin for the base rotation
+
 #endif

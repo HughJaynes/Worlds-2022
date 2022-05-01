@@ -1,7 +1,7 @@
 {
     "py/object": "pros.conductor.project.Project",
     "py/state": {
-        "project_name": "2022-Worlds",
+        "project_name": "2022 Worlds",
         "target": "v5",
         "templates": {
             "kernel": {
@@ -304,6 +304,9 @@
                 "version": "4.2.0"
             }
         },
-        "upload_options": {}
+        "upload_options": {
+            "slot": 1, 
+            "description": "By 8059E - Jonathan, Janav, Wei Zheng and Ethan"
+        }
     }
 }

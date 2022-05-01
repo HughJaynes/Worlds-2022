@@ -5,6 +5,11 @@ bool lcPos = false;
 bool tPos = false;
 int rState = 0;
 
+int xPos;
+int yPos;
+int bearingPos;
+int *absolutePosition[3] = {&xPos, &yPos, &bearingPos};
+
 /**
  * Runs initialization code. This occurs as soon as the program is started.
  *
@@ -28,8 +33,8 @@ void initialize() {
 
     Controller master (E_CONTROLLER_MASTER);
 
-    int * lPosPointer = &lPos;
-    Task liftController (liftControl, (void*)lPosPointer, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Lift Control");
+    Task liftController (liftControl, (void*)"ignore", TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Lift Controller Task");
+    Task baseController (baseControl, (void*)absolutePosition, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Base Controller Task");
 }
 
 /**
@@ -110,6 +115,7 @@ void opcontrol() {
                 lPos = LIFTDOWN;
             }
         }
+        changeLift(lPos);
 
         if (master.get_digital_new_press(E_CONTROLLER_DIGITAL_R1)) {
             lcPos = !lcPos;
@@ -118,10 +124,18 @@ void opcontrol() {
 
         if (master.get_digital_new_press(E_CONTROLLER_DIGITAL_R2)) {
             tPos = !tPos;
-            TC.set_value(!tPos);
-            delay(1);
-            T1.set_value(tPos);
-            T2.set_value(tPos);
+            if (tPos) {
+                T1.set_value(tPos);
+                T2.set_value(tPos);
+                delay(200);
+                TC.set_value(!tPos);
+            }
+            else {
+                TC.set_value(!tPos);
+                delay(200);
+                T1.set_value(tPos);
+                T2.set_value(tPos);
+            }
         }
 
         if (master.get_digital_new_press(E_CONTROLLER_DIGITAL_X)) {
@@ -154,7 +168,7 @@ void opcontrol() {
       	FR.move(master.get_analog(E_CONTROLLER_ANALOG_RIGHT_Y));
       	MR.move(master.get_analog(E_CONTROLLER_ANALOG_RIGHT_Y));
       	BR.move(master.get_analog(E_CONTROLLER_ANALOG_RIGHT_Y));
-        
+
       	delay(5);
     }
 }
