@@ -7,7 +7,7 @@ int rState = 0;
 
 void liftControl (void* param) {
 	Motor LI (LIPORT);
-    
+
     LI.tare_position();
 
     while (true) {
@@ -160,11 +160,11 @@ void opcontrol() {
       	FL.move(master.get_analog(E_CONTROLLER_ANALOG_LEFT_Y));
       	ML.move(master.get_analog(E_CONTROLLER_ANALOG_LEFT_Y));
       	BL.move(master.get_analog(E_CONTROLLER_ANALOG_LEFT_Y));
-        
+
       	FR.move(master.get_analog(E_CONTROLLER_ANALOG_RIGHT_Y));
       	MR.move(master.get_analog(E_CONTROLLER_ANALOG_RIGHT_Y));
       	BR.move(master.get_analog(E_CONTROLLER_ANALOG_RIGHT_Y));
-        
+
       	delay(5);
     }
 }
