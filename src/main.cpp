@@ -5,6 +5,7 @@ bool lcPos = false;
 bool tPos = false;
 int rState = 0;
 
+<<<<<<< HEAD
 void liftControl (void* param) {
 	Motor LI (LIPORT);
 
@@ -16,6 +17,8 @@ void liftControl (void* param) {
     }
 }
 
+=======
+>>>>>>> 791f03440d9ef30593c09639c126f6c3a91c9868
 /**
  * Runs initialization code. This occurs as soon as the program is started.
  *
@@ -39,7 +42,8 @@ void initialize() {
 
     Controller master (E_CONTROLLER_MASTER);
 
-    Task liftController (liftControl);
+    int * lPosPointer = &lPos;
+    Task liftController (liftControl, (void*)lPosPointer, TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Lift Control");
 }
 
 /**
