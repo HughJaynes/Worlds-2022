@@ -35,6 +35,9 @@
 #define PROS_USE_LITERALS
 
 #include "api.h"
+#include "globals.hpp"
+#include "mechLib.hpp"
+#include "auton.hpp"
 
 /**
  * You should add more #includes here
@@ -50,8 +53,9 @@
  * concurrently! The okapi namespace will export all symbols inside the pros
  * namespace.
  */
-// using namespace pros;
-// using namespace pros::literals;
+using namespace pros;
+using namespace pros::literals;
+using namespace std;
 // using namespace okapi;
 
 /**
