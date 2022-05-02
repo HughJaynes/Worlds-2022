@@ -304,6 +304,9 @@
                 "version": "4.2.0"
             }
         },
-        "upload_options": {}
+        "upload_options": {
+		"name": "2022-Worlds", 
+		"description": "By Jonathan, Janav, Wei Zheng and Ethan"
+	  }
     }
 }

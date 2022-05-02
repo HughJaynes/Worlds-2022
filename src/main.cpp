@@ -1,8 +1,20 @@
 #include "main.h"
 
-int lPos = 0;
-int rState = 0;
-bool frontPos = true;
+/**
+ * A callback function for LLEMU's center button.
+ *
+ * When this callback is fired, it will toggle line 2 of the LCD text between
+ * "I was pressed!" and nothing.
+ */
+void on_center_button() {
+	static bool pressed = false;
+	pressed = !pressed;
+	if (pressed) {
+		pros::lcd::set_text(2, "I was pressed!");
+	} else {
+		pros::lcd::clear_line(2);
+	}
+}
 
 /**
  * Runs initialization code. This occurs as soon as the program is started.
@@ -11,30 +23,10 @@ bool frontPos = true;
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
+	pros::lcd::initialize();
+	pros::lcd::set_text(1, "Hello PROS User!");
 
-    Motor FL (FLPORT, E_MOTOR_GEARSET_18, true, E_MOTOR_ENCODER_DEGREES);
-    Motor FR (FRPORT, E_MOTOR_GEARSET_18, false, E_MOTOR_ENCODER_DEGREES);
-    Motor ML (MLPORT, E_MOTOR_GEARSET_18, true, E_MOTOR_ENCODER_DEGREES);
-    Motor MR (MRPORT, E_MOTOR_GEARSET_18, false, E_MOTOR_ENCODER_DEGREES);
-    Motor BL (BLPORT, E_MOTOR_GEARSET_18, false, E_MOTOR_ENCODER_DEGREES);
-    Motor BR (BRPORT, E_MOTOR_GEARSET_18, true, E_MOTOR_ENCODER_DEGREES);
-    Motor LI (LIPORT, E_MOTOR_GEARSET_36, false, E_MOTOR_ENCODER_DEGREES);
-    Motor RI (RIPORT, E_MOTOR_GEARSET_06, false, E_MOTOR_ENCODER_DEGREES);
-
-    ADIDigitalOut LC (LCPISTON);
-    ADIDigitalOut T1 (T1PISTON);
-    ADIDigitalOut T2 (T2PISTON);
-    ADIDigitalOut TC (TCPISTON);
-
-    Imu IMU (IMUPORT);
-
-    Controller master (E_CONTROLLER_MASTER);
-
-    Task liftControlTask (liftControl, (void*)"PROS", TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Lift Control");
-    Task baseOdometryTask (baseOdometry, (void*)"PROS", TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Odometry");
-    Task baseControlTask (baseControl, (void*)"PROS", TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Base Control");
-    Task getBearingTask (getBearing, (void*)"PROS", TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Sensors");
-    Task backIntakeTask (toggleTilter, (void*)"PROS", TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Back Intake");
+	pros::lcd::register_btn1_cb(on_center_button);
 }
 
 /**
@@ -66,9 +58,7 @@ void competition_initialize() {}
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
-void autonomous() {
-  moveBase(30,3000);
-}
+void autonomous() {}
 
 /**
  * Runs the operator control code. This function will be started in its own task
@@ -84,85 +74,19 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
-    Motor FL (FLPORT);
-    Motor FR (FRPORT);
-    Motor ML (MLPORT);
-    Motor MR (MRPORT);
-    Motor BL (BLPORT);
-    Motor BR (BRPORT);
-    Motor LI (LIPORT);
-    Motor RI (RIPORT);
+	pros::Controller master(pros::E_CONTROLLER_MASTER);
+	pros::Motor left_mtr(1);
+	pros::Motor right_mtr(2);
 
-    ADIDigitalOut LC (LCPISTON);
+	while (true) {
+		pros::lcd::print(0, "%d %d %d", (pros::lcd::read_buttons() & LCD_BTN_LEFT) >> 2,
+		                 (pros::lcd::read_buttons() & LCD_BTN_CENTER) >> 1,
+		                 (pros::lcd::read_buttons() & LCD_BTN_RIGHT) >> 0);
+		int left = master.get_analog(ANALOG_LEFT_Y);
+		int right = master.get_analog(ANALOG_RIGHT_Y);
 
-    Controller master (E_CONTROLLER_MASTER);
-
-	while (true)
-    {
-        if (master.get_digital_new_press(E_CONTROLLER_DIGITAL_L1)) {
-            if (lPos <= LIFTDOWN) {
-                lPos = LIFTMID;
-            } else if (lPos == LIFTMID) {
-                lPos = LIFTUP;
-            }
-        } else if (master.get_digital_new_press(E_CONTROLLER_DIGITAL_L2)) {
-            if (lPos == LIFTUP) {
-                lPos = LIFTMID;
-            } else if (lPos == LIFTMID) {
-                rState = 0;
-                RI.move(0);
-                lPos = LIFTDOWN;
-            }
-        }
-
-        moveLift(lPos);
-
-        if (master.get_digital_new_press(E_CONTROLLER_DIGITAL_R1)) {
-            // lcToggle();
-            frontPos = !frontPos;
-            if(frontPos){
-              LC.set_value(LOW);
-            }else {
-              LC.set_value(HIGH);
-            }
-        }
-
-        if (master.get_digital_new_press(E_CONTROLLER_DIGITAL_R2)) {
-          toggleSwitch();
-        }
-
-        if (master.get_digital_new_press(E_CONTROLLER_DIGITAL_X)) {
-            if (rState == 0 && lPos > LIFTDOWN) {
-                rState = 1;
-                RI.move(RINGSPEED);
-            } else {
-                rState = 0;
-                RI.move(0);
-            }
-        }
-
-        if (master.get_digital(E_CONTROLLER_DIGITAL_B)) {
-            if (rState == 1) {
-                rState = 2;
-                RI.move(-RINGSPEED);
-            }
-        } else if (!master.get_digital(E_CONTROLLER_DIGITAL_B)) {
-            if (rState == 2) {
-                rState = 1;
-                RI.move(RINGSPEED);
-            }
-        }
-
-        // Tank Drive controls
-      	FL.move(master.get_analog(E_CONTROLLER_ANALOG_LEFT_Y));
-      	ML.move(master.get_analog(E_CONTROLLER_ANALOG_LEFT_Y));
-      	BL.move(master.get_analog(E_CONTROLLER_ANALOG_LEFT_Y));
-
-      	FR.move(master.get_analog(E_CONTROLLER_ANALOG_RIGHT_Y));
-      	MR.move(master.get_analog(E_CONTROLLER_ANALOG_RIGHT_Y));
-      	BR.move(master.get_analog(E_CONTROLLER_ANALOG_RIGHT_Y));
-
-        printf("Heading: %.2f\n",bearing);
-      	delay(5);
-    }
+		left_mtr = left;
+		right_mtr = right;
+		pros::delay(20);
+	}
 }
