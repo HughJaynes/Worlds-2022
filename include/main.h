@@ -38,6 +38,7 @@
 #include "globals.hpp"
 #include "mechLib.hpp"
 #include "auton.hpp"
+#include "mathematics.hpp"
 
 /**
  * You should add more #includes here

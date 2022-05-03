@@ -305,8 +305,7 @@
             }
         },
         "upload_options": {
-		"name": "2022-Worlds", 
-		"description": "By Jonathan, Janav, Wei Zheng and Ethan"
-	  }
+		    "description": "By Jonathan, Janav, Wei Zheng and Ethan"
+	    }
     }
 }

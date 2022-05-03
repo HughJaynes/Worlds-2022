@@ -1,135 +1,123 @@
 #include "main.h"
 
+/**
+ * Runs initialization code. This occurs as soon as the program is started.
+ *
+ * All other competition modes are blocked by initialize; it is recommended
+ * to keep execution time for this mode under a few seconds.
+ */
 void initialize() {
+    Motor FL (FLPORT, E_MOTOR_GEARSET_18, true, E_MOTOR_ENCODER_DEGREES);
+    Motor FR (FRPORT, E_MOTOR_GEARSET_18, false, E_MOTOR_ENCODER_DEGREES);
+    Motor ML (MLPORT, E_MOTOR_GEARSET_18, true, E_MOTOR_ENCODER_DEGREES);
+    Motor MR (MRPORT, E_MOTOR_GEARSET_18, false, E_MOTOR_ENCODER_DEGREES);
+    Motor BL (BLPORT, E_MOTOR_GEARSET_18, false, E_MOTOR_ENCODER_DEGREES);
+    Motor BR (BRPORT, E_MOTOR_GEARSET_18, true, E_MOTOR_ENCODER_DEGREES);
+    Motor LI (LIPORT, E_MOTOR_GEARSET_36, false, E_MOTOR_ENCODER_DEGREES);
+    Motor RI (RIPORT, E_MOTOR_GEARSET_06, false, E_MOTOR_ENCODER_DEGREES);
 
-	Motor FL(FLPort, E_MOTOR_GEARSET_18, false, E_MOTOR_ENCODER_DEGREES);
-	Motor BL(BLPort, E_MOTOR_GEARSET_18, false, E_MOTOR_ENCODER_DEGREES);
-	Motor FR(FRPort, E_MOTOR_GEARSET_18, true, E_MOTOR_ENCODER_DEGREES);
-	Motor BR(BRPort, E_MOTOR_GEARSET_18, true, E_MOTOR_ENCODER_DEGREES);
-	Motor AL(ALPort, E_MOTOR_GEARSET_18, false, E_MOTOR_ENCODER_DEGREES);
-	Motor AR(ARPort, E_MOTOR_GEARSET_18, true, E_MOTOR_ENCODER_DEGREES);
-	Motor CL(CLPort, E_MOTOR_GEARSET_18, false, E_MOTOR_ENCODER_DEGREES);
-	Motor LF(LFPort, E_MOTOR_GEARSET_36, true, E_MOTOR_ENCODER_DEGREES);
-	Task drivePDTask(drivePD, (void*)"PROS", TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "My Task");
+    Controller master (E_CONTROLLER_MASTER);
+
+    Task subsystemController (subsystemControl, (void*)"ignore", TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Controls Pneumatics, Lift and Rings");
+    Task baseController (baseControl, (void*)"ignore", TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Controls the drivetrain");
+
+    Imu IMU(IMUPORT);
+    IMU.reset();
 
 }
 
+/**
+ * Runs while the robot is in the disabled state of Field Management System or
+ * the VEX Competition Switch, following either autonomous or opcontrol. When
+ * the robot is enabled, this task will exit.
+ */
 void disabled() {}
 
-
+/**
+ * Runs after initialize(), and before autonomous when connected to the Field
+ * Management System or the VEX Competition Switch. This is intended for
+ * competition-specific initialization routines, such as an autonomous selector
+ * on the LCD.
+ *
+ * This task will exit when the robot is enabled and autonomous or opcontrol
+ * starts.
+ */
 void competition_initialize() {}
 
-
+/**
+ * Runs the user autonomous code. This function will be started in its own task
+ * with the default priority and stack size whenever the robot is enabled via
+ * the Field Management System or the VEX Competition Switch in the autonomous
+ * mode. Alternatively, this function may be called in initialize or opcontrol
+ * for non-competition testing purposes.
+ *
+ * If the robot is disabled or communications is lost, the autonomous task
+ * will be stopped. Re-enabling the robot will restart the task, not re-start it
+ * from where it left off.
+ */
 void autonomous() {
-
-	Motor FL(FLPort);
-	Motor BL(BLPort);
-	Motor FR(FRPort);
-	Motor BR(BRPort);
-	Motor AL(ALPort);
-	Motor AR(ARPort);
-	Motor CL(CLPort);
-	Motor LF(LFPort);
-
-	AL.tare_position();
-	AR.tare_position();
-	CL.tare_position();
-	LF.tare_position();
-
-	lrtAuton2();
+  rotateBase(90, 100000);
 }
 
-
+/**
+ * Runs the operator control code. This function will be started in its own task
+ * with the default priority and stack size whenever the robot is enabled via
+ * the Field Management System or the VEX Competition Switch in the operator
+ * control mode.
+ *
+ * If no competition control is connected, this function will run immediately
+ * following initialize().
+ *
+ * If the robot is disabled or communications is lost, the
+ * operator control task will be stopped. Re-enabling the robot will restart the
+ * task, not resume it from where it left off.
+ */
 void opcontrol() {
-	double targetArm = 0;
-	double targetClaw = 0;
-	int armPos = 0;
-	double changeArmKp = ARMKP;
-	bool clawState = false;
-	int liftDir = 0;
+    Motor FL (FLPORT);
+    Motor FR (FRPORT);
+    Motor ML (MLPORT);
+    Motor MR (MRPORT);
+    Motor BL (BLPORT);
+    Motor BR (BRPORT);
+    Motor LI (LIPORT);
+    Motor RI (RIPORT);
 
-// Initializing
-	Motor FL(FLPort);
-	Motor BL(BLPort);
-	Motor FR(FRPort);
-	Motor BR(BRPort);
-	Motor AL(ALPort);
-	Motor AR(ARPort);
-	Motor CL(CLPort);
-	Motor LF(LFPort);
+    Controller master (E_CONTROLLER_MASTER);
 
-	Controller main(E_CONTROLLER_MASTER);
+	while (true)
+    {
+        // Subsystem controls
+        if (master.get_digital_new_press(E_CONTROLLER_DIGITAL_L1)) {
+            changeLiftUp();
+        } else if (master.get_digital_new_press(E_CONTROLLER_DIGITAL_L2)) {
+            changeLiftDown();
+        }
 
-	while (true) {
+        if (master.get_digital_new_press(E_CONTROLLER_DIGITAL_R1)) {
+            changeClamp();
+        }
 
-// Tank Drive Control
-		FL.move(main.get_analog(E_CONTROLLER_ANALOG_LEFT_Y));
-		BL.move(main.get_analog(E_CONTROLLER_ANALOG_LEFT_Y));
-		FR.move(main.get_analog(E_CONTROLLER_ANALOG_RIGHT_Y));
-		BR.move(main.get_analog(E_CONTROLLER_ANALOG_RIGHT_Y));
+        if (master.get_digital_new_press(E_CONTROLLER_DIGITAL_R2)) {
+            changeTilter();
+        }
 
-// Arm Control
-		if(main.get_digital_new_press(DIGITAL_L1)) {
-			if (armPos == 0) {
-				targetArm = ARMMID;
-				changeArmKp = ARMKP;
-				armPos = 1;
-			}
-			else if (armPos == 1) {
-				targetArm = ARMHIGH;
-				changeArmKp = ARMKP;
-				armPos = 2;
-			}
+        if (master.get_digital_new_press(E_CONTROLLER_DIGITAL_X)) {
+            changeRingOnOff();
+        }
 
-		}
-		if(main.get_digital_new_press(DIGITAL_L2)) {
-			if (armPos == 2) {
-				targetArm = ARMMID;
-				changeArmKp = 0.3;
-				armPos = 1;
-			}
-			else if (armPos == 1) {
-				targetArm = ARMLOW;
-				changeArmKp = 0.3;
-				armPos = 0;
-			}
-		}
+        if (master.get_digital_new_press(E_CONTROLLER_DIGITAL_B)) {
+            changeRingUpDown();
+        }
 
-	// Claw Control
-		if(main.get_digital_new_press(DIGITAL_R1)) {
-			if (clawState == true) {
-				targetClaw = CLAWUP;
-				clawState = false;
-			}
-			else if (clawState == false) {
-				targetClaw = CLAWDOWN;
-				clawState = true;
-			}
-		}
-		if(main.get_digital_new_press(DIGITAL_R2)) {
-			if (liftDir == 0) {
-				liftDir = 1;
-			}
-			else {
-				liftDir = 0;
-			}
-		}
-		if(main.get_digital(DIGITAL_R2)) {
-			if (liftDir == -0) {
-				LF.move(127);
-			}
-			else {
-				LF.move(-127);
-			}
-		}
-		else {
-			LF.move(0);
-			LF.set_brake_mode(E_MOTOR_BRAKE_HOLD);
-		}
+        // Tank-Drive controls
+      	FL.move(master.get_analog(E_CONTROLLER_ANALOG_LEFT_Y));
+      	ML.move(master.get_analog(E_CONTROLLER_ANALOG_LEFT_Y));
+      	BL.move(master.get_analog(E_CONTROLLER_ANALOG_LEFT_Y));
+        
+      	FR.move(master.get_analog(E_CONTROLLER_ANALOG_RIGHT_Y));
+      	MR.move(master.get_analog(E_CONTROLLER_ANALOG_RIGHT_Y));
+      	BR.move(master.get_analog(E_CONTROLLER_ANALOG_RIGHT_Y));
 
-		armControl(targetArm,changeArmKp);
-		clawControl(targetClaw);
-		printf("armPos: %.i\n",armPos);
-		delay(5);
-	}
+      	delay(5);
+    }
 }
