@@ -33,7 +33,7 @@
 #define BASEKP 0.4 // Kp value for the base
 #define BASEKD 0.1 // Kd value for the base
 
-#define ROTATEKP 1.6 // Kp value for the base rotation
-#define ROTATEKD 0.2 // Kd value for the base rotation
+#define ROTATEKP 1 // Kp value for the base rotation
+#define ROTATEKD 1 // Kd value for the base rotation
 
 #endif

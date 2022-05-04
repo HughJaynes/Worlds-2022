@@ -1,11 +1,10 @@
 #include "main.h"
 
-#define MAX_POWL 127
-#define MAX_POWR 100
-#define RAMP_POW 0.5
+double max_pow = 0;
 
 int lPos = 0;
 bool tPos = false;
+bool tPosPrev = true;
 bool cPos = false;
 int rPos = 0;
 
@@ -58,6 +57,7 @@ void changeLiftDown () {
  * so that the change in position may be passed onto the subsystemControl task
  */
 void changeTilter () {
+    tPosPrev = tPos;
     tPos = !tPos;
 }
 
@@ -111,25 +111,25 @@ void subsystemControl (void* ignore) {
 	Motor LI (LIPORT);
     Motor RI (RIPORT);
     LI.tare_position();
-    
     ADIDigitalOut LC (LCPISTON);
     ADIDigitalOut T1 (T1PISTON);
     ADIDigitalOut T2 (T2PISTON);
     ADIDigitalOut TC (TCPISTON);
 
     while (true) {
-        LI.move(lPos - (LI.get_position()) * LIFTKP);
-        if (tPos) {
-            T1.set_value(tPos);
-            T2.set_value(tPos);
+        LI.move(lPos - (LI.get_position()) * LIFTKP);    
+        if (tPos && !tPosPrev) {
+            T1.set_value(HIGH);
+            T2.set_value(HIGH);
             delay(200);
-            TC.set_value(!tPos);
-        }
-        else {
-            TC.set_value(!tPos);
+            TC.set_value(LOW);
+            delay(500);
+            TC.set_value(HIGH);
+        } else if (!tPos && tPosPrev) {
+            TC.set_value(HIGH);
             delay(200);
-            T1.set_value(tPos);
-            T2.set_value(tPos);
+            T1.set_value(LOW);
+            T2.set_value(LOW);
         }
         LC.set_value(cPos);
         if (rPos == 0) {
@@ -139,6 +139,7 @@ void subsystemControl (void* ignore) {
         } else if (rPos == 2) {
             RI.move(-RINGSPEED);
         }
+        tPosPrev = tPos;
         delay(5);
     }
 }
@@ -149,11 +150,12 @@ void subsystemControl (void* ignore) {
  * May be accessed from outside mechLib, 
  * so that the change in position may be passed onto the baseControl task
  */
-void moveBase (int lTarg, int rTarg, int customTimeout, double customKp, double customKd) {
+void moveBase (int lTarg, int rTarg, int customTimeout, double customKp, double customKd, double maxPower) {
     targetL = lTarg, targetR = rTarg;
     driveKp = customKp, driveKd = customKd;
     timeout = customTimeout;
     mode = MOVE_BASE;
+    max_pow = maxPower;
 }
 
 /**
@@ -220,31 +222,32 @@ void baseControl (void * ignore) {
                 previousR = errorR;
                 powerL = (errorL * driveKp) + (derivativeL * driveKd);
                 powerR = (errorR * driveKp) + (derivativeR * driveKd);
-                
-                /*
-                powerL = abscap(deltapowerL, RAMP_POW);
-                powerR = abscap(deltapowerR, RAMP_POW);
-                */
-
-                FL.move (abscap(powerL,MAX_POWL));
-                ML.move (abscap(powerL,MAX_POWL));
-                BL.move (abscap(powerL,MAX_POWL));
-                FR.move (abscap(powerR,MAX_POWR));
-                MR.move (abscap(powerR,MAX_POWR));
-                BR.move (abscap(powerR,MAX_POWR));
+                FL.move (abscap(powerL,max_pow));
+                ML.move (abscap(powerL,max_pow));
+                BL.move (abscap(powerL,max_pow));
+                FR.move (abscap(powerR,max_pow));
+                MR.move (abscap(powerR,max_pow));
+                BR.move (abscap(powerR,max_pow));
                 delay(5);
                 printf("DRIVE BASE: powerL: %.2f, errorL: %.2f, powerR: %.2f, errorR: %2.f\n", powerL, errorL, powerR, errorR);
             }
             mode = BRAKE_BASE;
-        } else if (mode == ROTATE_BASE) {
+        } else if (mode == ROTATE_BASE && !IMU.is_calibrating()) {
             printf("ROTATE BASE");
             // Rotation Code
             bearing = IMU.get_heading();
             errorRotate = targetRotate - bearing;
+
             startTime = millis();
             while (fabs(errorRotate) > 20 && (millis() - startTime) < timeout) {
                 bearing = IMU.get_heading();
                 errorRotate = targetRotate - bearing;
+                if (errorRotate > 180) {
+                    errorRotate = errorRotate - 360;
+                }
+                if (errorRotate < -180) {
+                    errorRotate += 360;
+                }
                 derivativeRotate = errorRotate - previousRotate;
                 previousRotate = errorRotate;
                 powerRotate = (errorRotate * rotateKp) + (derivativeRotate * rotateKd);

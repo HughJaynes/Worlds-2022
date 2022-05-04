@@ -23,7 +23,6 @@ void initialize() {
 
     Imu IMU(IMUPORT);
     IMU.reset();
-
 }
 
 /**
@@ -56,7 +55,7 @@ void competition_initialize() {}
  * from where it left off.
  */
 void autonomous() {
-  rotateBase(90, 100000);
+    autonCode();
 }
 
 /**

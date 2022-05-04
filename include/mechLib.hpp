@@ -8,7 +8,7 @@ void changeClamp();
 void changeRingOnOff();
 void changeRingUpDown();
 void subsystemControl(void* ignore);
-void moveBase (int lTarg, int rTarg, int customTimeout, double customKp = BASEKP, double customKd = BASEKD);
+void moveBase (int lTarg, int rTarg, int customTimeout, double customKp = BASEKP, double customKd = BASEKD, double maxPow = 127);
 void rotateBase (int targ, int customTimeout, double customKp = ROTATEKP, double customKd = ROTATEKD);
 void baseControl(void * ignore);
 
