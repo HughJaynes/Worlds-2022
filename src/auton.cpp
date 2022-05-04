@@ -1,30 +1,33 @@
 #include "main.h"
 
-int afterBackIntake = 500;
-
-void afterBackIntakeMinus () {
-    afterBackIntake -= 10;
-}
-
-void afterBackIntakePlus () {
-    afterBackIntake += 10;
-}
-
 void autonCode() {
+    Motor LI (LIPORT);
+    LI.tare_position();
     changeTilter();
-    delay(afterBackIntake);
-    moveBase(-650, -650, 3000, 0.2, 0.05, 90);
+    delay(3000);
+    moveBase(-650, -650, 3000, 0.2, 0.1, 85);
     delay(3000);
     changeTilter();
-    /*
-    delay(400);
     changeLiftUp();
     changeLiftUp();
+    delay(200);
     changeRingOnOff();
-    rotateBase(295, 750);
-    delay(750);
-    moveBase(400, 400, 1300, 0.2, 0.2, 37);
-    delay(1300);
+    rotateBase(-60, 2000);
+    delay(2000);
+    moveBase(600, 600, 2000, 0.15, 0.25, 37);
+    delay(3000);
+    moveBase(-500,-100,2000);
+    delay(2000);
+    changeLiftDown();
+    changeLiftDown();
+    changeClamp();
+    moveBase(-300,-300,2000);
+    delay(2000);
+    changeTilter();
+    delay(250);
+    rotateBase(135,2000);
+    delay(2000);
+    /*
     moveBase(-100, -200, 750, 0.4, 0.2, 110);
     delay(750);
     rotateBase(90, 800, 1, 2);
@@ -46,5 +49,7 @@ void autonCode() {
     delay(1500);
     changeClamp();
     rotateBase(10, 500);
+    delay(1000);
+    changeRingOnOff();
     */
 }

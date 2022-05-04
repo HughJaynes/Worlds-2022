@@ -24,7 +24,7 @@
 #define LIFTDOWN 55 // Down position of lift
 #define LIFTKP 1 // Kp value for the lift motor
 
-#define RINGSPEED 127 // Speed of Ring Intake
+#define RINGSPEED 100 // Speed of Ring Intake
 
 #define ROTATE_BASE 0 // Rotate the base
 #define MOVE_BASE 1 // Move the base

@@ -110,7 +110,6 @@ void changeRingUpDown () {
 void subsystemControl (void* ignore) {
 	Motor LI (LIPORT);
     Motor RI (RIPORT);
-    LI.tare_position();
     ADIDigitalOut LC (LCPISTON);
     ADIDigitalOut T1 (T1PISTON);
     ADIDigitalOut T2 (T2PISTON);
@@ -196,24 +195,17 @@ void baseControl (void * ignore) {
 
     while(competition::is_autonomous()){
         if (mode == MOVE_BASE) {
-            FL.move(0);
             FL.tare_position();
-            ML.move(0);
             ML.tare_position();
-            BL.move(0);
             BL.tare_position();
-            FR.move(0);
             FR.tare_position();
-            MR.move(0);
             MR.tare_position();
-            BR.move(0);
             BR.tare_position();
             // Movement Code
             errorL = targetL - (FL.get_position());
             errorR = targetR - (FR.get_position());
             startTime = millis();
             while ((fabs(errorL) > 40 || fabs(errorR) > 40) && (millis() - startTime) < timeout) {
-
                 errorL = targetL - FL.get_position();
                 errorR = targetR - FR.get_position();
                 derivativeL = errorL - previousL;
@@ -229,7 +221,6 @@ void baseControl (void * ignore) {
                 MR.move (abscap(powerR,max_pow));
                 BR.move (abscap(powerR,max_pow));
                 delay(5);
-                printf("DRIVE BASE: powerL: %.2f, errorL: %.2f, powerR: %.2f, errorR: %2.f\n", powerL, errorL, powerR, errorR);
             }
             mode = BRAKE_BASE;
         } else if (mode == ROTATE_BASE && !IMU.is_calibrating()) {
@@ -258,7 +249,6 @@ void baseControl (void * ignore) {
                 MR.move(-powerRotate);
                 BR.move(-powerRotate);
                 delay(5);
-                printf("ROTATE BASE: bearing: %.2f, error: %.2f, power: %.2f\n", bearing, errorRotate, powerRotate);
             }
             mode = BRAKE_BASE;
         } else if (mode == BRAKE_BASE) {
@@ -283,7 +273,6 @@ void baseControl (void * ignore) {
             previousL = 0, previousR = 0, previousRotate = 0;
             timeout = 0, startTime = 0;
             delay(5);
-            printf("BRAKE BASE powerL: %.2f, errorL: %.2f, powerR: %.2f, errorR: %2.f\n", powerL, errorL, powerR, errorR);
         }
     }
 }
