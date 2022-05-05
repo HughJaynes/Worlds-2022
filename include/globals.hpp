@@ -11,7 +11,7 @@
 #define LIPORT 4 // Lift motor port
 #define RIPORT 5 // Ring Intake motor port
 
-#define IMUPORT 20 // Port for Interial Sensor
+#define IMUPORT 19 // Port for Interial Sensor
 
 #define LCPISTON 'A' // Lift claw piston port
 #define T1PISTON 'D' // Tilter 1 piston port
