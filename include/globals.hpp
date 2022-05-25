@@ -20,11 +20,11 @@
 
 // Constants for Subsystems
 #define LIFTUP 580 // Up position of lift
-#define LIFTMID 350 // Middle position of lift
+#define LIFTMID 370 // Middle position of lift
 #define LIFTDOWN 55 // Down position of lift
 #define LIFTKP 1 // Kp value for the lift motor
 
-#define RINGSPEED 100 // Speed of Ring Intake
+#define RINGSPEED 115 // Speed of Ring Intake
 
 #define ROTATE_BASE 0 // Rotate the base
 #define MOVE_BASE 1 // Move the base

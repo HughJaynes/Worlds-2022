@@ -78,7 +78,7 @@ void changeClamp () {
  * so that the change in position may be passed onto the subsystemControl task
  */
 void changeRingOnOff () {
-    if (rPos == 0) {
+    if (rPos == 0 && lPos >= LIFTMID) {
         rPos = 1;
     } else if (rPos == 1 | rPos == 2) {
         rPos = 0;
@@ -110,23 +110,30 @@ void changeRingUpDown () {
 void subsystemControl (void* ignore) {
 	Motor LI (LIPORT);
     Motor RI (RIPORT);
+    Motor FL(FLPORT);
+    Motor ML(MLPORT);
+	Motor BL(FLPORT);
+	Motor FR(FRPORT);
+    Motor MR(MRPORT);
+	Motor BR(BRPORT);
     ADIDigitalOut LC (LCPISTON);
     ADIDigitalOut T1 (T1PISTON);
     ADIDigitalOut T2 (T2PISTON);
     ADIDigitalOut TC (TCPISTON);
 
     while (true) {
+        // printf("Avg Base Temp: %10.f, Ring Temp: %10.f, Lift Temp: %10.f\n", (Fp.get_temperature() + FR.get_temperature() + ML.get_temperature() + MR.get_temperature() + BL.get_temperature() + BR.get_temperature()) / 6, RI.get_temperature(), LI.get_temperature());
         LI.move(lPos - (LI.get_position()) * LIFTKP);    
         if (tPos && !tPosPrev) {
             T1.set_value(HIGH);
             T2.set_value(HIGH);
-            delay(200);
-            TC.set_value(LOW);
             delay(500);
+            TC.set_value(LOW);
+            delay(750);
             TC.set_value(HIGH);
         } else if (!tPos && tPosPrev) {
             TC.set_value(HIGH);
-            delay(200);
+            delay(250);
             T1.set_value(LOW);
             T2.set_value(LOW);
         }

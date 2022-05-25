@@ -1,5 +1,9 @@
 #include "main.h"
 
+bool arcade = false;
+double leftPower = 0;
+double rightPower = 0;
+
 /**
  * Runs initialization code. This occurs as soon as the program is started.
  *
@@ -17,11 +21,6 @@ void initialize() {
     Motor RI (RIPORT, E_MOTOR_GEARSET_06, false, E_MOTOR_ENCODER_DEGREES);
 
     Controller master (E_CONTROLLER_MASTER);
-    Task baseController (baseControl, (void*)"ignore", TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Controls the drivetrain");
-    Task subsystemController (subsystemControl, (void*)"ignore", TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Controls Pneumatics, Lift and Rings");
-    
-    Imu IMU(IMUPORT);
-    IMU.reset(); 
     LI.tare_position();
 }
 
@@ -55,32 +54,33 @@ void competition_initialize() {}
  * from where it left off.
  */
 void autonomous() {
+    Task baseController (baseControl, (void*)"ignore", TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Controls the drivetrain");
+    Task subsystemController (subsystemControl, (void*)"ignore", TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Controls Pneumatics, Lift and Rings");
+
+    Imu IMU(IMUPORT);
+    IMU.reset(); 
+    
+    delay(3000);
+
     changeTilter();
-    delay(3000);
-    moveBase(-600, -600, 3000, 0.3, 0.3, 80);
-    delay(3000);
+    delay(1000);
+    moveBase(-700, -650, 1500, 0.2, 0.25, 70);
+    delay(1500);
     changeTilter();
     changeLiftUp();
     changeLiftUp();
-    delay(200);
     changeRingOnOff();
     delay(1000);
-    rotateBase(-65, 2000);
-    delay(2000);
-    moveBase(600, 600, 6000, 0.08, 0.25, 70);
-    delay(6000);
+    rotateBase(-68, 1500);
+    delay(1500);
+    moveBase(1200, 1200, 4000, 0.1, 0.2, 30);
+    delay(5000);
     changeRingOnOff();
-    /*
+    moveBase(-700,-100,2000);
     delay(2000);
-    changeLiftDown();
-    changeLiftDown();
-    changeClamp();
-    moveBase(-300,-300,2000);
-    delay(2000);
-    changeTilter();
-    delay(250);
-    rotateBase(135,2000);
-    */
+
+    subsystemController.suspend();
+    baseController.suspend();
 }
 
 /**
@@ -97,6 +97,8 @@ void autonomous() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
+    Task subsystemController (subsystemControl, (void*)"ignore", TASK_PRIORITY_DEFAULT, TASK_STACK_DEPTH_DEFAULT, "Controls Pneumatics, Lift and Rings");
+    
     Motor FL (FLPORT);
     Motor FR (FRPORT);
     Motor ML (MLPORT);
@@ -105,7 +107,6 @@ void opcontrol() {
     Motor BR (BRPORT);
     Motor LI (LIPORT);
     Motor RI (RIPORT);
-
     Controller master (E_CONTROLLER_MASTER);
 
 	while (true)
@@ -133,14 +134,26 @@ void opcontrol() {
             changeRingUpDown();
         }
 
+        if (master.get_digital_new_press(E_CONTROLLER_DIGITAL_DOWN)) {
+            arcade = !arcade;
+        }
+
+        if (arcade) {
+            leftPower = master.get_analog(E_CONTROLLER_ANALOG_LEFT_Y) + master.get_analog(E_CONTROLLER_ANALOG_RIGHT_X);
+            rightPower = master.get_analog(E_CONTROLLER_ANALOG_LEFT_Y) - master.get_analog(E_CONTROLLER_ANALOG_RIGHT_X);
+        }
+        else {
+            leftPower = master.get_analog(E_CONTROLLER_ANALOG_LEFT_Y);
+            rightPower = master.get_analog(E_CONTROLLER_ANALOG_RIGHT_Y);
+        }
         // Tank-Drive controls
-      	FL.move(master.get_analog(E_CONTROLLER_ANALOG_LEFT_Y));
-      	ML.move(master.get_analog(E_CONTROLLER_ANALOG_LEFT_Y));
-      	BL.move(master.get_analog(E_CONTROLLER_ANALOG_LEFT_Y));
+      	FL.move(leftPower);
+      	ML.move(leftPower);
+      	BL.move(leftPower);
         
-      	FR.move(master.get_analog(E_CONTROLLER_ANALOG_RIGHT_Y));
-      	MR.move(master.get_analog(E_CONTROLLER_ANALOG_RIGHT_Y));
-      	BR.move(master.get_analog(E_CONTROLLER_ANALOG_RIGHT_Y));
+      	FR.move(rightPower);
+      	MR.move(rightPower);
+      	BR.move(rightPower);
 
       	delay(5);
     }
